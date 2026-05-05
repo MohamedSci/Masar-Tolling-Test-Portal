@@ -1,6 +1,6 @@
 # End User License Agreement (EULA)
 
-## Masar Tolling Test Portal
+## Masar Tolling Testing Portal
 
 **Version:** 1.1  
 **Effective Date:** 2026  

@@ -56,9 +56,9 @@ class TestDataRepository {
           { id: "TC-D25", title: "Calibration vehicle – length measurement", expected: "Within ±5% of certified length" },
           { id: "TC-D26", title: "Calibration vehicle – height measurement", expected: "Within ±5% of certified height" },
           { id: "TC-D27", title: "Calibration vehicle – width measurement", expected: "Within ±5% of certified width" },
-          { id: "TC-D28", title: "Standard 2-axle truck classification", expected: "Classified as Small Truck / Class 2" },
-          { id: "TC-D29", title: "Semi-truck (5 axles) classification", expected: "Classified as Heavy Truck / Class H" },
-          { id: "TC-D30", title: "Motorcycle / small courier van", expected: "Classified as Light Vehicle or ignored if below gate limits" },
+          { id: "TC-D28", title: "Standard 2-axle truck classification", expected: "Classified as Medium Truck / Class C1" },
+          { id: "TC-D29", title: "Semi-truck (5 axles) classification", expected: "Classified as Trailer (5 Axles) / Class C4" },
+          { id: "TC-D30", title: "Motorcycle / small courier van and (Length less than 6 m & Weight less than 7 Ton", expected: "Classified as Light Vehicle or ignored if below gate limits" },
           { id: "TC-D31", title: "AVC laser curtain misalignment by 5cm", expected: "Detection still works; may reduce accuracy; alert generated" }
         ]
       },
@@ -133,7 +133,7 @@ class TestDataRepository {
           { id: "TC-F02", title: "Axle counter + laser mapping to ANPR timestamp", expected: "All data mapped to same transaction timestamp; no orphan records" },
           { id: "TC-F03", title: "Weight captured without corresponding plate (orphan)", expected: "No orphan data stored; transaction flagged for review" },
           { id: "TC-F04", title: "Multiple sensors produce consistent vehicle record", expected: "Single transaction contains all sensor outputs; no fragmentation" },
-          { id: "TC-F05", title: "Mandatory field missing (no weight data)", expected: "Transaction rejected or sent to manual validation; not auto-approved" },
+          { id: "TC-F05", title: "Mandatory field missing (no weight data)", expected: "Transaction sent to manual validation; not auto-approved" },
           { id: "TC-F06", title: "All mandatory fields present and valid", expected: "Transaction created with all required fields: Plaza ID, Lane ID, unique Passage ID, timestamp, device status flags" }
         ]
       },
@@ -144,86 +144,84 @@ class TestDataRepository {
           { id: "TC-F07", title: "RFID and ANPR match – high confidence", expected: "Confidence score ≥95%; both identifiers stored; auto-ready" },
           { id: "TC-F08", title: "RFID valid but ANPR low confidence (dirty plate)", expected: "RFID primary; confidence adjusted; transaction may auto-approve if RFID ≥95%" },
           { id: "TC-F09", title: "ANPR valid but RFID missing", expected: "ANPR primary; Missing Tag flag; confidence may be lower; manual review possible" },
-          { id: "TC-F10", title: "Mismatch – Plate A with RFID Tag B", expected: "Fraud/Tamper alert; transaction escalated to Back Office; confidence = 0%" },
-          { id: "TC-F11", title: "Both ANPR and RFID fail/absent", expected: "Transaction created with origin = Manual; all available data logged" }
+          { id: "TC-F10", title: "Both ANPR and RFID fail/absent", expected: "Transaction created with origin = Manual; all available data logged" }
         ]
       },
       {
         id: "fuse-suite3", title: "Axle Count & WIM Integration – Cross-Check",
         desc: "Validate cross-check between axle counter and WIM. Per TC-PLZ-3.2-E.",
         testCases: [
-          { id: "TC-F12", title: "Axle count matches across Axle Counter, AVC, and WIM", expected: "No discrepancy; transaction auto-validated" },
-          { id: "TC-F13", title: "Axle Counter reports 5, AVC reports 4 (discrepancy = 1)", expected: "Discrepancy = 1 triggers manual validation; all values logged" },
-          { id: "TC-F14", title: "Axle Counter reports 3, AVC reports 6 (discrepancy > 1)", expected: "Major discrepancy; transaction escalated; system flags inconsistency" },
-          { id: "TC-F15", title: "WIM axle count differs from Axle Counter", expected: "Cross-check fails; manual validation required; both counts stored" }
+          { id: "TC-F11", title: "Axle count matches across Axle Counter, AVC, and WIM", expected: "No discrepancy; transaction auto-validated" },
+          { id: "TC-F12", title: "Axle Counter reports 5, AVC reports 4 (discrepancy = 1)", expected: "Discrepancy = 1 triggers manual validation; all values logged" },
+          { id: "TC-F13", title: "Axle Counter reports 3, AVC reports 6 (discrepancy > 1)", expected: "Major discrepancy; transaction escalated; system flags inconsistency" },
+          { id: "TC-F14", title: "WIM axle count differs from Axle Counter", expected: "Cross-check fails; manual validation required; both counts stored" }
         ]
       },
       {
         id: "fuse-suite4", title: "Transaction Object – Complete Record Creation",
         desc: "Validate transaction object structure and mandatory fields. Per TC-PLZ-1.1-E.",
         testCases: [
-          { id: "TC-F16", title: "Unique Passage ID generated per transaction", expected: "No duplicate IDs; UUID or sequential unique" },
-          { id: "TC-F17", title: "Timestamp recorded with millisecond precision", expected: "Transaction timestamp matches laser curtain trigger time" },
-          { id: "TC-F18", title: "Device status flags populated for all sensors", expected: "Each sensor has Online/Offline/Degraded status in transaction record" },
-          { id: "TC-F19", title: "Plaza ID and Lane ID correctly assigned", expected: "Transaction linked to correct plaza and lane" }
+          { id: "TC-F15", title: "Unique Passage ID generated per transaction", expected: "No duplicate IDs; UUID or sequential unique" },
+          { id: "TC-F16", title: "Timestamp recorded with millisecond precision", expected: "Transaction timestamp matches laser curtain trigger time" },
+          { id: "TC-F17", title: "Device status flags populated for all sensors", expected: "Each sensor has Online/Offline/Degraded status in transaction record" },
+          { id: "TC-F18", title: "Plaza ID and Lane ID correctly assigned", expected: "Transaction linked to correct plaza and lane" }
         ]
       },
       {
         id: "fuse-suite5", title: "Automatic Validation – Master Transaction",
         desc: "Validate auto-approval when confidence ≥95%. Per TC-PLZ-5.1-E, PM-ALPHA-SYS-004.",
         testCases: [
-          { id: "TC-F20", title: "All sensors green; confidence ≥95%", expected: "Origin = Master; no manual intervention; synced to Central" },
-          { id: "TC-F21", title: "Confidence exactly 95% (boundary)", expected: "Origin = Master (≥95% threshold met)" },
-          { id: "TC-F22", title: "Confidence 94% (just below threshold)", expected: "Origin = Manual; transaction routed to manual validation queue" },
-          { id: "TC-F23", title: "One sensor offline but others provide sufficient data", expected: "Confidence recalculated; fallback rules applied; may still auto-approve if threshold met" }
+          { id: "TC-F19", title: "All sensors green; confidence ≥95%", expected: "Origin = Master; no manual intervention; synced to Central" },
+          { id: "TC-F20", title: "Confidence exactly 95% (boundary)", expected: "Origin = Master (≥95% threshold met)" },
+          { id: "TC-F21", title: "Confidence 94% (just below threshold)", expected: "Origin = Manual; transaction routed to manual validation queue" },
+          { id: "TC-F22", title: "One sensor offline but others provide sufficient data", expected: "Confidence recalculated; fallback rules applied; may still auto-approve if threshold met" }
         ]
       },
       {
         id: "fuse-suite6", title: "Manual Validation Flagging – Low Confidence",
         desc: "Validate transactions correctly flagged for manual review. Per PM-ALPHA-SYS-005.",
         testCases: [
-          { id: "TC-F24", title: "ANPR confidence <60% (obscured plate)", expected: "Status = Review Required; routed to Manual Validation queue" },
-          { id: "TC-F25", title: "RFID missing + ANPR low confidence", expected: "Escalation alert sent; transaction requires manual intervention" },
-          { id: "TC-F26", title: "Multiple discrepancies (ANPR/RFID mismatch + axle count mismatch)", expected: "Immediate Escalation; all discrepancies logged; alert to Supervisor" },
-          { id: "TC-F27", title: "Manual validation timeout (5 minutes without action)", expected: "Transaction escalates automatically; status = Escalation; synced to Central" }
+          { id: "TC-F23", title: "ANPR confidence <60% (obscured plate)", expected: "Status = Review Required; routed to Manual Validation queue" },
+          { id: "TC-F24", title: "RFID missing + ANPR low confidence", expected: "Escalation alert sent; transaction requires manual intervention" },
+          { id: "TC-F25", title: "Multiple discrepancies (ANPR/RFID mismatch + axle count mismatch)", expected: "Immediate Escalation; all discrepancies logged; alert to Supervisor" },
+          { id: "TC-F26", title: "Manual validation timeout (5 minutes without action)", expected: "Transaction escalates automatically; status = Escalation; synced to Central" }
         ]
       },
       {
         id: "fuse-suite7", title: "Duplicate Transaction Prevention",
         desc: "Validate idempotency. Per TC-PLZ-15-NEW, PM-R06.",
         testCases: [
-          { id: "TC-F28", title: "Same vehicle passes twice within 2 seconds", expected: "Only one transaction created; second trigger ignored" },
-          { id: "TC-F29", title: "Duplicate transaction ID generation attempt", expected: "Database unique constraint enforced; duplicate rejected" },
-          { id: "TC-F30", title: "Network retry after successful sync causes duplicate", expected: "Idempotency key prevents duplicate in Central; acknowledgment matched" }
+          { id: "TC-F27", title: "Same vehicle passes twice within 2 seconds", expected: "Only one transaction created; second trigger ignored" },
+          { id: "TC-F28", title: "Duplicate transaction ID generation attempt", expected: "Database unique constraint enforced; duplicate rejected" },
+          { id: "TC-F29", title: "Network retry after successful sync causes duplicate", expected: "Idempotency key prevents duplicate in Central; acknowledgment matched" }
         ]
       },
       {
         id: "fuse-suite8", title: "Store-and-Forward – Offline Resilience",
         desc: "Validate offline queue and recovery. Per TC-PLZ-11.1-E, PM-ALPHA-INT-002.",
         testCases: [
-          { id: "TC-F31", title: "Network disconnect during transaction (30 min outage)", expected: "Transaction stored locally; forwarded upon reconnect; no data loss" },
-          { id: "TC-F32", title: "500 pending transactions in offline queue", expected: "FIFO order maintained; all synced after recovery; no duplicates" },
-          { id: "TC-F33", title: "Plaza Manager restart while offline queue has unsent data", expected: "Queue persisted; transactions survive restart; synced after reboot" },
-          { id: "TC-F34", title: "Data integrity after reconnection", expected: "All timestamps and sensor values identical to original capture" }
+          { id: "TC-F30", title: "Network disconnect during transaction (30 min outage)", expected: "Transaction stored locally; forwarded upon reconnect; no data loss" },
+          { id: "TC-F31", title: "500 pending transactions in offline queue", expected: "FIFO order maintained; all synced after recovery; no duplicates" },
+          { id: "TC-F32", title: "Plaza Manager restart while offline queue has unsent data", expected: "Queue persisted; transactions survive restart; synced after reboot" },
+          { id: "TC-F33", title: "Data integrity after reconnection", expected: "All timestamps and sensor values identical to original capture" }
         ]
       },
       {
         id: "fuse-suite9", title: "Decision Tree – Auto-Ready vs. Escalation",
         desc: "Validate complete decision tree logic. Per PM-ALPHA-SYS-004/005.",
         testCases: [
-          { id: "TC-F35", title: "All sensors green + confidence ≥95% → Auto-Ready", expected: "Transaction auto-approved; synced as Master" },
-          { id: "TC-F36", title: "RFID high + ANPR low → Review Required", expected: "Manual validation triggered; operator must review" },
-          { id: "TC-F37", title: "RFID low + ANPR high → Auto-Ready if plate reliable", expected: "ANPR primary; confidence may still meet threshold" },
-          { id: "TC-F38", title: "All sensors report but fusion confidence = 0%", expected: "Escalation; transaction sent to Back Office for investigation" }
+          { id: "TC-F34", title: "All sensors green + confidence ≥95% → Auto-Ready", expected: "Transaction auto-approved; synced as Master" },
+          { id: "TC-F35", title: "RFID high + ANPR low → Review Required", expected: "Since One High Confidence Identificaion then confidence may still meet threshold" },
+          { id: "TC-F36", title: "RFID low + ANPR high → Auto-Ready if plate reliable", expected: "ANPR primary; confidence may still meet threshold" },
+          { id: "TC-F37", title: "All sensors report but fusion confidence = 0%", expected: "Escalation; transaction sent to Back Office for investigation" }
         ]
       },
       {
         id: "fuse-suite10", title: "Concurrency & Load – Peak Traffic",
         desc: "Validate system under load. Per PM-BETA-PERF-001/002.",
         testCases: [
-          { id: "TC-F39", title: "50 trucks per minute steady load for 1 hour", expected: "No dropped transactions; response <500ms; memory stable" },
-          { id: "TC-F40", title: "Burst traffic – 100 trucks in 10 seconds", expected: "Queuing handles spike; all processed within 30 seconds" },
-          { id: "TC-F41", title: "4 lanes simultaneously processing 10 vehicles/min each", expected: "All lanes independent; no cross-lane interference; UI updates <2s" }
+          { id: "TC-F38", title: "50 trucks per minute steady load for 1 hour", expected: "No dropped transactions; response <500ms; memory stable" },
+          { id: "TC-F39", title: "4 lanes simultaneously processing 10 vehicles/min each", expected: "All lanes independent; no cross-lane interference; UI updates <2s" }
         ]
       }
     ]
@@ -283,153 +281,154 @@ class TestDataRepository {
           { id: "TC-V026", title: "Permit suspended due to non-payment", expected: "Treat as no permit; deduct toll; generate violation (C-BR-018)" },
           { id: "TC-V027", title: "Transaction with corrupted confidence data (null)", expected: "System handles gracefully; defaults to manual review; no crash" },
           { id: "TC-V028", title: "Transaction received with future timestamp", expected: "Flagged for review; not processed until time catches up or manual override" },
-          { id: "TC-V029", title: "Transaction with missing Plaza ID", expected: "Rejected; error logged; Plaza Manager notified" }
+          { id: "TC-V029", title: "Transaction with missing Plaza ID", expected: "Rejected; error logged; Plaza Manager notified" },
+          { id: "TC-V030", title: "Mismatch – Plate A with RFID Tag B", expected: "Fraud/Tamper alert; transaction escalated to Back Office; confidence = 0%" },
         ]
       },
       {
         id: "val-suite5", title: "Permit Validation – Lifecycle & Expiry",
         desc: "Validate permit push, storage, expiry, renewal grace periods, and revocation. Per C-PM-001 to C-PM-016.",
         testCases: [
-          { id: "TC-V030", title: "SRTA pushes new permit – stored correctly with all fields", expected: "Permit stored; acknowledgment sent; all fields match payload (C-E2E-001)" },
-          { id: "TC-V031", title: "SRTA pushes permit update (extension) – existing permit updated", expected: "Expiry date updated; old values archived in audit log (C-E2E-006)" },
-          { id: "TC-V032", title: "SRTA pushes permit revocation – permit marked revoked", expected: "Permit status = Revoked; subsequent transaction triggers violation (C-E2E-007)" },
-          { id: "TC-V033", title: "Permit expires at midnight – next transaction triggers violation", expected: "System marks permit expired; violation generated for next transaction" },
-          { id: "TC-V034", title: "Renewal within grace period (Day 13 of 14-day grace)", expected: "Warning alert; no late fee; permit renewed (C-PM-015)" },
-          { id: "TC-V035", title: "Renewal after grace period (Day 15) – late fee applied", expected: "Late fee calculated; user notified; permit renewed with penalty (C-PM-016)" },
-          { id: "TC-V036", title: "Duplicate permit push – ignored with acknowledgment", expected: "Duplicate detected; ignored; acknowledgment sent; no duplicate record" },
-          { id: "TC-V037", title: "Invalid permit data format – validation error returned", expected: "Validation error returned to SRTA; permit not stored" },
-          { id: "TC-V038", title: "Permit with missing mandatory fields (no plate number)", expected: "Rejected; error logged; SRTA notified" }
+          { id: "TC-V031", title: "SRTA pushes new permit – stored correctly with all fields", expected: "Permit stored; acknowledgment sent; all fields match payload (C-E2E-001)" },
+          { id: "TC-V032", title: "SRTA pushes permit update (extension) – existing permit updated", expected: "Expiry date updated; old values archived in audit log (C-E2E-006)" },
+          { id: "TC-V033", title: "SRTA pushes permit revocation – permit marked revoked", expected: "Permit status = Revoked; subsequent transaction triggers violation (C-E2E-007)" },
+          { id: "TC-V034", title: "Permit expires at midnight – next transaction triggers violation", expected: "System marks permit expired; violation generated for next transaction" },
+          { id: "TC-V035", title: "Renewal within grace period (Day 13 of 14-day grace)", expected: "Warning alert; no late fee; permit renewed (C-PM-015)" },
+          { id: "TC-V036", title: "Renewal after grace period (Day 15) – late fee applied", expected: "Late fee calculated; user notified; permit renewed with penalty (C-PM-016)" },
+          { id: "TC-V037", title: "Duplicate permit push – ignored with acknowledgment", expected: "Duplicate detected; ignored; acknowledgment sent; no duplicate record" },
+          { id: "TC-V038", title: "Invalid permit data format – validation error returned", expected: "Validation error returned to SRTA; permit not stored" },
+          { id: "TC-V039", title: "Permit with missing mandatory fields (no plate number)", expected: "Rejected; error logged; SRTA notified" }
         ]
       },
       {
         id: "val-suite6", title: "NOC Validation – Approval & Dependency",
         desc: "Validate NOC storage, approval workflow, expiry, and permit dependency. Per C-NOC-001 to C-NOC-007.",
         testCases: [
-          { id: "TC-V039", title: "SRTA pushes NOC data – stored correctly", expected: "NOC stored; all fields validated; acknowledgment sent (C-E2E-009)" },
-          { id: "TC-V040", title: "Permit requires NOC reference – valid NOC exists", expected: "Permit accepted; linked to NOC; both visible in UI" },
-          { id: "TC-V041", title: "Permit requires NOC but NOC is expired", expected: "Permit rejected; error returned: 'NOC expired'; no permit stored" },
-          { id: "TC-V042", title: "Permit requires NOC but NOC not found", expected: "Permit rejected; error: 'Referenced NOC not found'" },
-          { id: "TC-V043", title: "NOC expiry – permits referencing it are blocked", expected: "Expired NOC blocks new permit applications; existing permits flagged" },
-          { id: "TC-V044", title: "Multi-step NOC approval (3 approvers) – all approve", expected: "NOC approved after all 3 approvals; audit trail maintained (C-NOC-003)" },
-          { id: "TC-V045", title: "Multi-step NOC – one approver rejects", expected: "NOC rejected; rejection reason stored; applicant notified (C-NOC-004)" }
+          { id: "TC-V040", title: "SRTA pushes NOC data – stored correctly", expected: "NOC stored; all fields validated; acknowledgment sent (C-E2E-009)" },
+          { id: "TC-V041", title: "Permit requires NOC reference – valid NOC exists", expected: "Permit accepted; linked to NOC; both visible in UI" },
+          { id: "TC-V042", title: "Permit requires NOC but NOC is expired", expected: "Permit rejected; error returned: 'NOC expired'; no permit stored" },
+          { id: "TC-V043", title: "Permit requires NOC but NOC not found", expected: "Permit rejected; error: 'Referenced NOC not found'" },
+          { id: "TC-V044", title: "NOC expiry – permits referencing it are blocked", expected: "Expired NOC blocks new permit applications; existing permits flagged" },
+          { id: "TC-V045", title: "Multi-step NOC approval (3 approvers) – all approve", expected: "NOC approved after all 3 approvals; audit trail maintained (C-NOC-003)" },
+          { id: "TC-V046", title: "Multi-step NOC – one approver rejects", expected: "NOC rejected; rejection reason stored; applicant notified (C-NOC-004)" }
         ]
       },
       {
         id: "val-suite7", title: "Violation Detection & Fine Calculation Accuracy",
         desc: "Validate all violation types and fine amounts. Per C-VM-001 to C-VM-018.",
         testCases: [
-          { id: "TC-V046", title: "No permit violation – fine requested from SRTA", expected: "SRTA returns fine amount (e.g., 500 AED); violation created with correct amount (C-VM-001)" },
-          { id: "TC-V047", title: "Expired permit – 1 day overdue", expected: "Late fee = daily rate × 1 day; violation generated (C-VM-002)" },
-          { id: "TC-V048", title: "Overweight violation – 10% over limit", expected: "Fine = weight excess × rate; violation with evidence (C-VM-003)" },
-          { id: "TC-V049", title: "Overweight violation – 30% over limit (higher tier)", expected: "Higher penalty tier applied; fine escalated (C-VM-016)" },
-          { id: "TC-V050", title: "Single axle overweight", expected: "Axle violation recorded separately; fine calculated per axle (C-VM-004)" },
-          { id: "TC-V051", title: "Route violation (wrong gate)", expected: "Route violation generated (C-VM-005)" },
-          { id: "TC-V052", title: "Time restriction violation (outside operating hours)", expected: "Time violation generated (C-VM-006)" },
-          { id: "TC-V053", title: "Multiple violations in one transaction", expected: "All violations recorded separately; cumulative fine calculated correctly (C-VM-007)" },
-          { id: "TC-V054", title: "Grace period – first offense warning", expected: "Warning issued; fine waived if paid within grace period (C-VM-008)" },
-          { id: "TC-V055", title: "Repeat offender – 3 violations in 30 days", expected: "Enhanced fine applied; notification sent (C-VM-009)" },
-          { id: "TC-V056", title: "Appeal submitted with evidence – fine under review", expected: "Violation status = Under Review; fine frozen (C-VM-010)" },
-          { id: "TC-V057", title: "Appeal approved – fine waived", expected: "Fine cancelled; Tahseel reversal requested (C-VM-011)" },
-          { id: "TC-V058", title: "Appeal rejected – violation remains", expected: "Violation remains; user notified with reason (C-VM-012)" },
-          { id: "TC-V059", title: "Appeal decision within SLA (5 working days)", expected: "Decision communicated within SLA (C-VM-013)" }
+          { id: "TC-V047", title: "No permit violation – fine requested from SRTA", expected: "SRTA returns fine amount (e.g., 500 AED); violation created with correct amount (C-VM-001)" },
+          { id: "TC-V048", title: "Expired permit – 1 day overdue", expected: "Late fee = daily rate × 1 day; violation generated (C-VM-002)" },
+          { id: "TC-V049", title: "Overweight violation – 10% over limit", expected: "Fine = weight excess × rate; violation with evidence (C-VM-003)" },
+          { id: "TC-V050", title: "Overweight violation – 30% over limit (higher tier)", expected: "Higher penalty tier applied; fine escalated (C-VM-016)" },
+          { id: "TC-V051", title: "Single axle overweight", expected: "Axle violation recorded separately; fine calculated per axle (C-VM-004)" },
+          { id: "TC-V052", title: "Route violation (wrong gate)", expected: "Route violation generated (C-VM-005)" },
+          { id: "TC-V053", title: "Time restriction violation (outside operating hours)", expected: "Time violation generated (C-VM-006)" },
+          { id: "TC-V054", title: "Multiple violations in one transaction", expected: "All violations recorded separately; cumulative fine calculated correctly (C-VM-007)" },
+          { id: "TC-V055", title: "Grace period – first offense warning", expected: "Warning issued; fine waived if paid within grace period (C-VM-008)" },
+          { id: "TC-V056", title: "Repeat offender – 3 violations in 30 days", expected: "Enhanced fine applied; notification sent (C-VM-009)" },
+          { id: "TC-V057", title: "Appeal submitted with evidence – fine under review", expected: "Violation status = Under Review; fine frozen (C-VM-010)" },
+          { id: "TC-V058", title: "Appeal approved – fine waived", expected: "Fine cancelled; Tahseel reversal requested (C-VM-011)" },
+          { id: "TC-V059", title: "Appeal rejected – violation remains", expected: "Violation remains; user notified with reason (C-VM-012)" },
+          { id: "TC-V060", title: "Appeal decision within SLA (5 working days)", expected: "Decision communicated within SLA (C-VM-013)" }
         ]
       },
       {
         id: "val-suite8", title: "Wallet & Payment Validation – Tahseel Integration",
         desc: "Validate wallet linking, balance checks, payment posting, idempotency, and retry logic. Per C-INT-TAH-001 to C-INT-TAH-015.",
         testCases: [
-          { id: "TC-V060", title: "Post permit fee – success path", expected: "Payment processed; reference returned; permit activated (C-INT-TAH-001)" },
-          { id: "TC-V061", title: "Post fine – success path", expected: "Fine posted; reference returned; violation status updated (C-INT-TAH-002)" },
-          { id: "TC-V062", title: "Business error – insufficient balance", expected: "Payment failed; pass moved to SRTA queue for fine (C-INT-TAH-003)" },
-          { id: "TC-V063", title: "Business error – no registered account", expected: "Payment failed; user notified; pass queued (C-INT-TAH-004)" },
-          { id: "TC-V064", title: "System error (timeout) – retry logic (up to 10 times)", expected: "Retry with backoff; after 10 failures, queue paused; IT alert sent (C-INT-TAH-005)" },
-          { id: "TC-V065", title: "Duplicate payment prevention (idempotency)", expected: "Second request with same ID rejected; no double charge (C-INT-TAH-006)" },
-          { id: "TC-V066", title: "Payment reversal (refund)", expected: "Refund initiated; wallet credited (C-INT-TAH-007)" },
-          { id: "TC-V067", title: "Bulk payment posting (100 transactions)", expected: "All processed; success rate ≥99% (C-INT-TAH-008)" },
-          { id: "TC-V068", title: "Link Tahseel wallet to Masar account – success", expected: "Link successful; wallet details visible (C-INT-TAH-010)" },
-          { id: "TC-V069", title: "Link with invalid credentials – error returned", expected: "Error returned; link failed; no account compromised (C-INT-TAH-011)" },
-          { id: "TC-V070", title: "Link non-corporate account – error returned", expected: "Error returned per Tahseel BRD (C-INT-TAH-012)" },
-          { id: "TC-V071", title: "View wallet balance", expected: "Balance displayed correctly (C-INT-TAH-013)" },
-          { id: "TC-V072", title: "Top-up wallet via credit card", expected: "Payment processed; balance updated (C-INT-TAH-014)" },
-          { id: "TC-V073", title: "Top-up wallet via Apple Pay", expected: "Payment processed; balance updated (C-INT-TAH-015)" }
+          { id: "TC-V061", title: "Post permit fee – success path", expected: "Payment processed; reference returned; permit activated (C-INT-TAH-001)" },
+          { id: "TC-V062", title: "Post fine – success path", expected: "Fine posted; reference returned; violation status updated (C-INT-TAH-002)" },
+          { id: "TC-V063", title: "Business error – insufficient balance", expected: "Payment failed; pass moved to SRTA queue for fine (C-INT-TAH-003)" },
+          { id: "TC-V064", title: "Business error – no registered account", expected: "Payment failed; user notified; pass queued (C-INT-TAH-004)" },
+          { id: "TC-V065", title: "System error (timeout) – retry logic (up to 10 times)", expected: "Retry with backoff; after 10 failures, queue paused; IT alert sent (C-INT-TAH-005)" },
+          { id: "TC-V066", title: "Duplicate payment prevention (idempotency)", expected: "Second request with same ID rejected; no double charge (C-INT-TAH-006)" },
+          { id: "TC-V067", title: "Payment reversal (refund)", expected: "Refund initiated; wallet credited (C-INT-TAH-007)" },
+          { id: "TC-V068", title: "Bulk payment posting (100 transactions)", expected: "All processed; success rate ≥99% (C-INT-TAH-008)" },
+          { id: "TC-V069", title: "Link Tahseel wallet to Masar account – success", expected: "Link successful; wallet details visible (C-INT-TAH-010)" },
+          { id: "TC-V070", title: "Link with invalid credentials – error returned", expected: "Error returned; link failed; no account compromised (C-INT-TAH-011)" },
+          { id: "TC-V071", title: "Link non-corporate account – error returned", expected: "Error returned per Tahseel BRD (C-INT-TAH-012)" },
+          { id: "TC-V072", title: "View wallet balance", expected: "Balance displayed correctly (C-INT-TAH-013)" },
+          { id: "TC-V073", title: "Top-up wallet via credit card", expected: "Payment processed; balance updated (C-INT-TAH-014)" },
+          { id: "TC-V074", title: "Top-up wallet via Apple Pay", expected: "Payment processed; balance updated (C-INT-TAH-015)" }
         ]
       },
       {
         id: "val-suite9", title: "Daily Reconciliation – Financial Integrity",
         desc: "Validate end-of-day reconciliation between Central fines and Tahseel settlement. Per C-INT-TAH-009, C-E2E-011, C-E2E-012.",
         testCases: [
-          { id: "TC-V074", title: "Daily reconciliation – all fines matched", expected: "100% match; reconciliation report shows zero discrepancies (C-E2E-011)" },
-          { id: "TC-V075", title: "Reconciliation – one missing fine in Tahseel settlement", expected: "Discrepancy identified; missing fine listed in report (C-E2E-012)" },
-          { id: "TC-V076", title: "Reconciliation – amount mismatch (expected 500, got 450)", expected: "Amount mismatch flagged; both values shown; alert sent" },
-          { id: "TC-V077", title: "Reconciliation – fine in Tahseel not in Central", expected: "Unmatched item flagged; investigation required" },
-          { id: "TC-V078", title: "Reconciliation report export (Excel/CSV/PDF)", expected: "Export generated; content matches UI (C-INT-TAH-009)" },
-          { id: "TC-V079", title: "Discrepancy ≤0.1% for financial data (acceptance threshold)", expected: "Within tolerance; auto-approved; report archived" }
+          { id: "TC-V075", title: "Daily reconciliation – all fines matched", expected: "100% match; reconciliation report shows zero discrepancies (C-E2E-011)" },
+          { id: "TC-V076", title: "Reconciliation – one missing fine in Tahseel settlement", expected: "Discrepancy identified; missing fine listed in report (C-E2E-012)" },
+          { id: "TC-V077", title: "Reconciliation – amount mismatch (expected 500, got 450)", expected: "Amount mismatch flagged; both values shown; alert sent" },
+          { id: "TC-V078", title: "Reconciliation – fine in Tahseel not in Central", expected: "Unmatched item flagged; investigation required" },
+          { id: "TC-V079", title: "Reconciliation report export (Excel/CSV/PDF)", expected: "Export generated; content matches UI (C-INT-TAH-009)" },
+          { id: "TC-V080", title: "Discrepancy ≤0.1% for financial data (acceptance threshold)", expected: "Within tolerance; auto-approved; report archived" }
         ]
       },
       {
         id: "val-suite10", title: "RBAC & Security – Access Control & Audit",
         desc: "Validate role-based access, audit trails, and security controls. Per C-UR-001 to C-UR-007, C-SEC-001 to C-SEC-010.",
         testCases: [
-          { id: "TC-V080", title: "SRTA Operator – can view transactions (read-only)", expected: "Dashboard accessible; transactions visible; no edit capabilities (C-E2E-013)" },
-          { id: "TC-V081", title: "SRTA Operator – cannot access Reconciliation Reports", expected: "Menu item hidden or 403 Forbidden; access blocked" },
-          { id: "TC-V082", title: "SRTA Operator – cannot access User Management", expected: "Menu item hidden or 403 Forbidden" },
-          { id: "TC-V083", title: "Tahseel Finance User – can access reconciliation reports", expected: "Finance modules accessible; reports viewable" },
-          { id: "TC-V084", title: "Tahseel Finance User – cannot access User Management", expected: "Blocked; 403 Forbidden" },
-          { id: "TC-V085", title: "SRTA Supervisor – can view audit logs", expected: "Audit logs visible; all entries searchable" },
-          { id: "TC-V086", title: "SRTA Supervisor – can create new users", expected: "User creation form accessible; new user saved with correct role" },
-          { id: "TC-V087", title: "Audit trail completeness – all user actions logged", expected: "Login, permit view, transaction view, exports all logged with timestamp, user ID, IP, action type (C-E2E-014)" },
-          { id: "TC-V088", title: "Audit logs are append-only (immutable)", expected: "No deletion or modification of log entries possible" },
-          { id: "TC-V089", title: "Session timeout after 15 minutes of inactivity", expected: "Auto-logout; redirect to login page (C-UR-006)" },
-          { id: "TC-V090", title: "Brute force protection – 5 failed login attempts", expected: "Account locked; CAPTCHA triggered (C-SEC-003)" },
-          { id: "TC-V091", title: "SQL injection attempt on transaction filter", expected: "Blocked; input sanitized; no data exposed (C-SEC-009)" },
-          { id: "TC-V092", title: "XSS attempt in permit notes field", expected: "Blocked; output encoded; script not executed (C-SEC-010)" },
-          { id: "TC-V093", title: "TLS 1.2+ enforced for all external communications", expected: "Verified via penetration test; no downgrade possible (C-SEC-006)" }
+          { id: "TC-V081", title: "SRTA Operator – can view transactions (read-only)", expected: "Dashboard accessible; transactions visible; no edit capabilities (C-E2E-013)" },
+          { id: "TC-V082", title: "SRTA Operator – cannot access Reconciliation Reports", expected: "Menu item hidden or 403 Forbidden; access blocked" },
+          { id: "TC-V083", title: "SRTA Operator – cannot access User Management", expected: "Menu item hidden or 403 Forbidden" },
+          { id: "TC-V084", title: "Tahseel Finance User – can access reconciliation reports", expected: "Finance modules accessible; reports viewable" },
+          { id: "TC-V085", title: "Tahseel Finance User – cannot access User Management", expected: "Blocked; 403 Forbidden" },
+          { id: "TC-V086", title: "SRTA Supervisor – can view audit logs", expected: "Audit logs visible; all entries searchable" },
+          { id: "TC-V087", title: "SRTA Supervisor – can create new users", expected: "User creation form accessible; new user saved with correct role" },
+          { id: "TC-V088", title: "Audit trail completeness – all user actions logged", expected: "Login, permit view, transaction view, exports all logged with timestamp, user ID, IP, action type (C-E2E-014)" },
+          { id: "TC-V089", title: "Audit logs are append-only (immutable)", expected: "No deletion or modification of log entries possible" },
+          { id: "TC-V090", title: "Session timeout after 15 minutes of inactivity", expected: "Auto-logout; redirect to login page (C-UR-006)" },
+          { id: "TC-V091", title: "Brute force protection – 5 failed login attempts", expected: "Account locked; CAPTCHA triggered (C-SEC-003)" },
+          { id: "TC-V092", title: "SQL injection attempt on transaction filter", expected: "Blocked; input sanitized; no data exposed (C-SEC-009)" },
+          { id: "TC-V093", title: "XSS attempt in permit notes field", expected: "Blocked; output encoded; script not executed (C-SEC-010)" },
+          { id: "TC-V094", title: "TLS 1.2+ enforced for all external communications", expected: "Verified via penetration test; no downgrade possible (C-SEC-006)" }
         ]
       },
       {
         id: "val-suite11", title: "Integration Validation – SRTA, Tahseel, Plaza Sync",
         desc: "Validate all integration points function correctly. Per C-INT-PM-*, C-INT-SRTA-*, C-INT-TAH-*.",
         testCases: [
-          { id: "TC-V094", title: "SRTA permit push API – single permit received", expected: "Permit stored; 200 OK; acknowledgment sent (C-INT-SRTA-001)" },
-          { id: "TC-V095", title: "SRTA permit push API – batch of 100 permits", expected: "All stored; no data loss; acknowledgment for each" },
-          { id: "TC-V096", title: "SRTA fine calculation API – success", expected: "Fine amount returned; violation created (C-E2E-002)" },
-          { id: "TC-V097", title: "SRTA fine calculation API – temporary failure + retry success", expected: "Retries up to 10 times; eventual success; violation created (C-E2E-004)" },
-          { id: "TC-V098", title: "SRTA fine calculation API – max retries exceeded", expected: "Queue paused after 10 failures; IT alert sent; no partial data (C-E2E-005)" },
-          { id: "TC-V099", title: "Plaza Manager sends single Master transaction", expected: "Transaction stored; acknowledgment sent (C-INT-PM-001)" },
-          { id: "TC-V100", title: "Plaza Manager sends batch of 100 transactions", expected: "All processed; order preserved (C-INT-PM-002)" },
-          { id: "TC-V101", title: "Duplicate transaction from Plaza (same TrnxCode)", expected: "Duplicate detected; rejected with error (C-INT-PM-004)" },
-          { id: "TC-V102", title: "Plaza offline for 2 hours – replay queued transactions", expected: "All received; no duplicates; timestamps preserved (C-INT-PM-005)" },
-          { id: "TC-V103", title: "Tahseel fine posting – success with reference", expected: "Fine posted; reference stored; violation updated (C-INT-TAH-002)" },
-          { id: "TC-V104", title: "Integration health dashboard shows all systems green", expected: "Plaza, SRTA, Tahseel all showing OK status (CS-INT-01)" },
-          { id: "TC-V105", title: "Integration failure >15 minutes – alert generated", expected: "Alert visible in dashboard; email sent to admin (CS-INT-03)" }
+          { id: "TC-V095", title: "SRTA permit push API – single permit received", expected: "Permit stored; 200 OK; acknowledgment sent (C-INT-SRTA-001)" },
+          { id: "TC-V096", title: "SRTA permit push API – batch of 100 permits", expected: "All stored; no data loss; acknowledgment for each" },
+          { id: "TC-V097", title: "SRTA fine calculation API – success", expected: "Fine amount returned; violation created (C-E2E-002)" },
+          { id: "TC-V098", title: "SRTA fine calculation API – temporary failure + retry success", expected: "Retries up to 10 times; eventual success; violation created (C-E2E-004)" },
+          { id: "TC-V099", title: "SRTA fine calculation API – max retries exceeded", expected: "Queue paused after 10 failures; IT alert sent; no partial data (C-E2E-005)" },
+          { id: "TC-V100", title: "Plaza Manager sends single Master transaction", expected: "Transaction stored; acknowledgment sent (C-INT-PM-001)" },
+          { id: "TC-V101", title: "Plaza Manager sends batch of 100 transactions", expected: "All processed; order preserved (C-INT-PM-002)" },
+          { id: "TC-V102", title: "Duplicate transaction from Plaza (same TrnxCode)", expected: "Duplicate detected; rejected with error (C-INT-PM-004)" },
+          { id: "TC-V103", title: "Plaza offline for 2 hours – replay queued transactions", expected: "All received; no duplicates; timestamps preserved (C-INT-PM-005)" },
+          { id: "TC-V104", title: "Tahseel fine posting – success with reference", expected: "Fine posted; reference stored; violation updated (C-INT-TAH-002)" },
+          { id: "TC-V105", title: "Integration health dashboard shows all systems green", expected: "Plaza, SRTA, Tahseel all showing OK status (CS-INT-01)" },
+          { id: "TC-V106", title: "Integration failure >15 minutes – alert generated", expected: "Alert visible in dashboard; email sent to admin (CS-INT-03)" }
         ]
       },
       {
         id: "val-suite12", title: "Data Integrity – Duplicate Prevention & Mandatory Fields",
         desc: "Validate data integrity across all modules. Per Daily QA Checklist §3, C-DATA-001 to C-DATA-005.",
         testCases: [
-          { id: "TC-V106", title: "No orphaned transactions (without linked vehicle/permit)", expected: "Zero orphaned records in database" },
-          { id: "TC-V107", title: "No duplicate transaction codes in last 24 hours", expected: "Zero duplicates; unique constraint enforced" },
-          { id: "TC-V108", title: "All violations have corresponding transactions", expected: "100% linkage; no violation without source transaction" },
-          { id: "TC-V109", title: "No violations with NULL fine amounts", expected: "All violations have valid fine amounts; NULL not permitted" },
-          { id: "TC-V110", title: "All violations have evidence attached (plate image, timestamp)", expected: "Evidence present for every violation; no missing images" },
-          { id: "TC-V111", title: "Timestamp consistency across Plaza, Central, Tahseel", expected: "UTC timestamps; millisecond precision; no drift >1 second" },
-          { id: "TC-V112", title: "Data integrity across full chain (Plaza → Central → Tahseel)", expected: "All fields match; no corruption; hash verified (C-DATA-004)" },
-          { id: "TC-V113", title: "Historical data retrieval (7 years) – performance within SLA", expected: "Data accessible; query returns within SLA (C-DATA-005)" }
+          { id: "TC-V107", title: "No orphaned transactions (without linked vehicle/permit)", expected: "Zero orphaned records in database" },
+          { id: "TC-V108", title: "No duplicate transaction codes in last 24 hours", expected: "Zero duplicates; unique constraint enforced" },
+          { id: "TC-V109", title: "All violations have corresponding transactions", expected: "100% linkage; no violation without source transaction" },
+          { id: "TC-V110", title: "No violations with NULL fine amounts", expected: "All violations have valid fine amounts; NULL not permitted" },
+          { id: "TC-V111", title: "All violations have evidence attached (plate image, timestamp)", expected: "Evidence present for every violation; no missing images" },
+          { id: "TC-V112", title: "Timestamp consistency across Plaza, Central, Tahseel", expected: "UTC timestamps; millisecond precision; no drift >1 second" },
+          { id: "TC-V113", title: "Data integrity across full chain (Plaza → Central → Tahseel)", expected: "All fields match; no corruption; hash verified (C-DATA-004)" },
+          { id: "TC-V114", title: "Historical data retrieval (7 years) – performance within SLA", expected: "Data accessible; query returns within SLA (C-DATA-005)" }
         ]
       },
       {
         id: "val-suite13", title: "Fee & Exemption Configuration – System Parameters",
         desc: "Validate fee structures, exemption rules, working hours, and system parameters. Per CS-FEE-*, CS-EXEMPT-*, CS-HOURS-*, CS-PARAM-*.",
         testCases: [
-          { id: "TC-V114", title: "Fee structure visibility – view fee names, prices, validity periods", expected: "Fee structures displayed correctly; data sourced from SRTA (CS-FEE-004)" },
-          { id: "TC-V115", title: "Fee validity – End Date ≥ Start Date enforced", expected: "Validation error if End Date < Start Date; clear inline message (CS-FEE-005)" },
-          { id: "TC-V116", title: "Create exemption rule with date range condition", expected: "Rule saved; dynamic form fields appear based on selections (CS-EXEMPT-01)" },
-          { id: "TC-V117", title: "Search and export exemption rules", expected: "Filter works; export to Excel/CSV/PDF functional (CS-EXEMPT-03)" },
-          { id: "TC-V118", title: "Define working hours per plaza/lane – logical validation", expected: "Begin Time ≤ End Time enforced; clear error on invalid input (CS-HOURS-01)" },
-          { id: "TC-V119", title: "System parameter assignment to scope (Global/Plaza/Lane)", expected: "Parameter overrides applied correctly at each scope level (CS-PARAM-01)" },
-          { id: "TC-V120", title: "Truck classification rules – class name, axle count, dimensions, GVW", expected: "Classification rules saved; applied to incoming transactions (CS-FEE-002)" },
-          { id: "TC-V121", title: "Link truck classification to tollable class", expected: "Correct enforcement rules applied per vehicle type (CS-FEE-003)" }
+          { id: "TC-V115", title: "Fee structure visibility – view fee names, prices, validity periods", expected: "Fee structures displayed correctly; data sourced from SRTA (CS-FEE-004)" },
+          { id: "TC-V116", title: "Fee validity – End Date ≥ Start Date enforced", expected: "Validation error if End Date < Start Date; clear inline message (CS-FEE-005)" },
+          { id: "TC-V117", title: "Create exemption rule with date range condition", expected: "Rule saved; dynamic form fields appear based on selections (CS-EXEMPT-01)" },
+          { id: "TC-V118", title: "Search and export exemption rules", expected: "Filter works; export to Excel/CSV/PDF functional (CS-EXEMPT-03)" },
+          { id: "TC-V119", title: "Define working hours per plaza/lane – logical validation", expected: "Begin Time ≤ End Time enforced; clear error on invalid input (CS-HOURS-01)" },
+          { id: "TC-V120", title: "System parameter assignment to scope (Global/Plaza/Lane)", expected: "Parameter overrides applied correctly at each scope level (CS-PARAM-01)" },
+          { id: "TC-V121", title: "Truck classification rules – class name, axle count, dimensions, GVW", expected: "Classification rules saved; applied to incoming transactions (CS-FEE-002)" },
+          { id: "TC-V122", title: "Link truck classification to tollable class", expected: "Correct enforcement rules applied per vehicle type (CS-FEE-003)" }
         ]
       }
     ]
