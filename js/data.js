@@ -184,7 +184,7 @@ class TestDataRepository {
           { id: "TC-F23", title: "ANPR confidence <60% (obscured plate)", expected: "Status = Review Required; routed to Manual Validation queue" },
           { id: "TC-F24", title: "RFID missing + ANPR low confidence", expected: "Escalation alert sent; transaction requires manual intervention" },
           { id: "TC-F25", title: "Multiple discrepancies (ANPR/RFID mismatch + axle count mismatch)", expected: "Immediate Escalation; all discrepancies logged; alert to Supervisor" },
-          { id: "TC-F26", title: "Manual validation timeout (5 minutes without action)", expected: "Transaction escalates automatically; status = Escalation; synced to Central" }
+          { id: "TC-F26", title: "Manual validation timeout (120 minutes without action)", expected: "Transaction escalates automatically; status = Escalation; synced to Central" }
         ]
       },
       {
@@ -220,8 +220,9 @@ class TestDataRepository {
         id: "fuse-suite10", title: "Concurrency & Load – Peak Traffic",
         desc: "Validate system under load. Per PM-BETA-PERF-001/002.",
         testCases: [
-          { id: "TC-F38", title: "50 trucks per minute steady load for 1 hour", expected: "No dropped transactions; response <500ms; memory stable" },
-          { id: "TC-F39", title: "4 lanes simultaneously processing 10 vehicles/min each", expected: "All lanes independent; no cross-lane interference; UI updates <2s" }
+          { id: "TC-F38", title: "10 trucks per minute steady load for 1 hour", expected: "No dropped transactions; response <500ms; memory stable" },
+          { id: "TC-F39", title: "4 lanes simultaneously processing 10 vehicles/min each", expected: "All lanes independent; no cross-lane interference; UI updates <2s" },
+          { id: "TC-F40", title: "50 trucks per minute Stress for 1 hour", expected: "No dropped transactions; response <1000ms; The Solution still stable and not Crashed" }
         ]
       }
     ]
