@@ -42,6 +42,14 @@ class HelpService {
   <p>${this.#escape(h.instructions)}</p>
   <h5>Environment</h5>
   <p>${this.#escape(h.environment)}</p>
+  <h5>Testing Types</h5>
+  <p>${this.#escape(h.testingType)}</p>
+  <h5>Testing Levels</h5>
+  <p>${this.#escape(h.testingLevel)}</p>
+  <h5>Target Systems</h5>
+  <p>${this.#escape(h.targetSystem)}</p>
+  <h5>Testing Tools</h5>
+  <p>${this.#escape(h.tools)}</p>
 </body>
 </html>`);
     w.document.close();
